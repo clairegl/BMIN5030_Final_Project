@@ -26,6 +26,19 @@ Explain why your problem is interdisciplinary, what fields can contribute to its
 
 Describe the data used and general methodological approach used to address the problem described in the @sec-introduction. Subsequently, incorporate full R code necessary to retrieve and clean data, and perform analysis. Be sure to include a description of code so that others (including your future self) can understand what you are doing and why.
 
+```{R}
+
+library(rusps)
+library(XML)
+username <- 'cglaiusps' # get this quickly and freely 
+                           #by signing up at https://registration.shippingapis.com/ (not commercial).
+
+output <- validate_address_usps(street = addresses$StreetName, 
+                                city = addresses$City, 
+                                state = addresses$State, 
+                                username = username)
+```
+
 ## Results {#sec-results}
 
 Describe your results and include relevant tables, plots, and code/comments used to obtain them. You may refer to the @sec-methods as needed. End with a brief conclusion of your findings related to the question you set out to address. You can include references if you'd like, but this is not required.
