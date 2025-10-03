@@ -27,15 +27,15 @@ Explain why your problem is interdisciplinary, what fields can contribute to its
 Describe the data used and general methodological approach used to address the problem described in the @sec-introduction. Subsequently, incorporate full R code necessary to retrieve and clean data, and perform analysis. Be sure to include a description of code so that others (including your future self) can understand what you are doing and why.
 
 ```{R}
-
+litter_data <- read.csv(file = "/Users/cglai/Documents/UPenn/BMIN_5030/BMIN5030_Final_Project/Litter_Index_Blocks.csv")
 library(rusps)
 library(XML)
 username <- 'cglaiusps' # get this quickly and freely 
                            #by signing up at https://registration.shippingapis.com/ (not commercial).
 
-output <- validate_address_usps(street = addresses$StreetName, 
-                                city = addresses$City, 
-                                state = addresses$State, 
+output <- validate_address_usps(street = litter_data$LR_HUNDRED_BLOCK, 
+                                city = litter_data$City, 
+                                state = litter_data$State, 
                                 username = username)
 ```
 
