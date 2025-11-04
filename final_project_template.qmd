@@ -1,5 +1,5 @@
 ---
-title: "Your Title"
+title: "Litter distribution in The City of Philadelphia"
 subtitle: "BMIN5030 Final Project"
 author: "Claire Lai"
 format: html
@@ -16,33 +16,25 @@ Use this template to complete your project throughout the course. Your Final Pro
 
 ## Overview {#sec-overview}
 
-Give a brief a description of your project and its goal(s), what data you are using to complete it, and what two faculty/staff in different fields you have spoken to about your project with a brief summary of what you learned from each person. Include a link to your final project GitHub repository.
+Litter and neighborhood cleanliness are important social determinants of health that can negatively impact the safety and health of a city’s residents (1). In Philadelphia litter was ranked as the second most pressing issue in the city by residents (2). This project aims to understand how litter is distributed throughout the city and which areas may be disproportionately impacted by a high litter presence.
 
-Social determinants of health \[\]. Included in this is litter as it is a component of a person's physical environment that and common in areas around Philadelphia
+Ashley Butago, a Jr. Data Analyst at the Institute of Biomedical Informatics was consulted for this project and helped identify a potential need for reverse geocoding of the dataset and relevant tools for this task. Amy Yang, a \[verify position\], was also consulted for this project and helped guide the project design and analysis.
 
-The goal of this project is to understand the distribution of Philadelphia's litter by census tract and how it correlates to the median household income and other demographics of an area. \[for public health reasons\].
-
-To understand how the litter of the city may unfairly impact \[\]
-
-The staff I talked to
+<https://github.com/clairegl/BMIN5030_Final_Project>
 
 ## Introduction {#sec-introduction}
 
-<https://a816-dohbesp.nyc.gov/IndicatorPublic/data-stories/sanitation/>
+Social determinants of health are made up of the condition a person lives in that impacts their health. They are non-medical and largely consist of social, environmental, and personal factors such as a person’s built environment, economic situation, and level of education. Included in this is litter, a component of a person's physical environment. It is important for a city to have proper sanitation as it is a key part of the health and safety of residents (1) and while the presence of litter can affect all residents of a place it has been shown to disproportionately impact lower income, vulnerable communities (6). Some types of litter such as broken glass can injure residents (3) while other types of litter such as food scraps can feed pests like cockroaches and rats (1). Additionally, litter not only has a physical impact but a psychological one as well. Pervasive litter influences resident’s perceptions of how safe and welcoming the area they live in is, decreasing satisfaction with their living conditions (5).
 
-<https://www.phila.gov/media/20190821135505/Litter-Index-Report-2019.pdf>
+In Philadelphia specifically, it was rated as the second most pressing issue of the city by residents (2). Highlighting the attitudes of and urgency around addressing the city’s litter problem and improving sanitation. Thus, the goal of this project is to map the distribution of Philadelphia's litter by census tract and how litter presence correlates to the median household income, race, education and other demographics features of the tracts in order to understand which parts of the city may be disproportionately impacted by litter and where city sanitation efforts should be directed.
 
-<https://www.sciencedirect.com/science/article/pii/S0959652625004196>
+This project aims to answer the following research questions:
 
-<https://www.trashfreemaryland.org/blog/2019/05/23/can-litter-affect-mental-health-what-were-starting-to-learn-about-a-connection-between-clean-communities-and-wellness>
+RQ1: How is litter distributed throughout Philadelphia?
 
--   <https://pdxscholar.library.pdx.edu/open_access_etds/3119/>
+RQ2: How is the distribution of litter correlated to demographic factors, such as, median income, education, and race?
 
-<https://pmc.ncbi.nlm.nih.gov/articles/PMC6147112/>
-
-Describe the problem addressed, its significance, and some background to motivate the problem. This should extend what is in the @sec-overview.
-
-Explain why your problem is interdisciplinary, what fields can contribute to its understanding, and incorporate background related to what you learned from meeting with faculty/staff.
+The issue of litter’s impact on health is more than a public health issue. It is an interdisciplinary issue that can draw from environmental, urban planning, and data science perspectives. Addressing this issue requires collaboration with those from different disciplines. Consulted in this project were two staff members Ashley Butago and Amy Yang. Butago is a Jr. Data Analyst at the Institute of Biomedical Informatics. She helped with understanding the dataset, identified a potential need for reverse geocoding of the dataset, and suggested relevant APIs and R packages for this task. Yang is a \[verify position\]. She helped with guiding the project design and suggested different types of analysis for this project.
 
 ## Methods {#sec-methods}
 
@@ -71,3 +63,15 @@ Describe your results and include relevant tables, plots, and code/comments used
 ## Conclusion
 
 This the conclusion. The @sec-results can be invoked here.
+
+## Citations
+
+1.  Chiu D. How sanitation service, trash, and rats affect our lives and our health \[Internet\]. Environment & Health Data Portal. 2023. Available from: https://a816-dohbesp.nyc.gov/IndicatorPublic/data-stories/sanitation/
+
+2.  City Of Philadelphia. 2019 Litter Index Report \[Internet\]. Office of Sustainability; 2019. Available from: https://www.phila.gov/media/20190821135505/Litter-Index-Report-2019.pdf ‌
+
+3.  Gutberlet J, Uddin SMN. Household waste and health risks affecting waste pickers and the environment in low- and middle-income countries. Int J Occup Environ Health. 2017 Oct;23(4):299-310. doi: 10.1080/10773525.2018.1484996. Epub 2018 Jun 20. PMID: 29924702; PMCID: PMC6147112.
+
+4.  Kachef R, Chadwick M. Litter Impact Index: A proposed weighting of litter items to inform sustainable packaging development and extended producer responsibility. JOURNAL OF CLEANER PRODUCTION. 2025 Mar;495:145069. Epub 2025 Feb 21. doi: 10.1016/j.jclepro.2025.145069
+
+5.  Shearer, AL, "Understanding Neighborhood Satisfaction for Individuals with Psychiatric Disabilities: a Mixed Methods Study" (2016). Dissertations and Theses. Paper 3119. <https://doi.org/10.15760/etd.3115>
