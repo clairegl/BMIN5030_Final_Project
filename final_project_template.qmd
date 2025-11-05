@@ -72,7 +72,7 @@ philly_tracts <- tracts("PA", "Philadelphia", year = 2010)
 # Load census data
 census_vals <- get_acs(geography = "tract",
                    year = 2017,
-                   variables = c("B06012_001", "B25077_002", 
+                   variables = c("B06012_002", "B25077_001", 
                                  "B25031_001", "B06009_003"),
                    state = "PA", 
                    county = "Philadelphia")
