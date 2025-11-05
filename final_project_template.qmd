@@ -26,39 +26,97 @@ Ashley Butago, a Jr. Data Analyst at the Institute of Biomedical Informatics was
 
 Social determinants of health are made up of the condition a person lives in that impacts their health. They are non-medical and largely consist of social, environmental, and personal factors such as a person’s built environment, economic situation, and level of education. Included in this is litter, a component of a person's physical environment. It is important for a city to have proper sanitation as it is a key part of the health and safety of residents (1) and while the presence of litter can affect all residents of a place it has been shown to disproportionately impact lower income, vulnerable communities (6). Some types of litter such as broken glass can injure residents (3) while other types of litter such as food scraps can feed pests like cockroaches and rats (1). Additionally, litter not only has a physical impact but a psychological one as well. Pervasive litter influences resident’s perceptions of how safe and welcoming the area they live in is, decreasing satisfaction with their living conditions (5).
 
-In Philadelphia specifically, it was rated as the second most pressing issue of the city by residents (2). Highlighting the attitudes of and urgency around addressing the city’s litter problem and improving sanitation. Thus, the goal of this project is to map the distribution of Philadelphia's litter by census tract and how litter presence correlates to the median household income, race, education and other demographics features of the tracts in order to understand which parts of the city may be disproportionately impacted by litter and where city sanitation efforts should be directed.
+In Philadelphia specifically, it was rated as the second most pressing issue of the city by residents (2). Highlighting the attitudes of and urgency around addressing the city’s litter problem and improving sanitation. Thus, the goal of this project is to map the distribution of Philadelphia's litter by census tract and how litter presence correlates to the median household income, education and other indicators of wealth and vulnrability in order to understand which parts of the city may be disproportionately impacted by litter and where city sanitation efforts should be directed.
 
 This project aims to answer the following research questions:
 
 RQ1: How is litter distributed throughout Philadelphia?
 
-RQ2: How is the distribution of litter correlated to demographic factors, such as, median income, education, and race?
+RQ2: How is the distribution of litter correlated to median household income, education and other indicators of wealth and vulnrability?
 
-The issue of litter’s impact on health is more than a public health issue. It is an interdisciplinary issue that can draw from environmental, urban planning, and data science perspectives. Addressing this issue requires collaboration with those from different disciplines. Consulted in this project were two staff members Ashley Butago and Amy Yang. Butago is a Jr. Data Analyst at the Institute of Biomedical Informatics. She helped with understanding the dataset, identified a potential need for reverse geocoding of the dataset, and suggested relevant APIs and R packages for this task. Yang is a \[verify position\]. She helped with guiding the project design and suggested different types of analysis for this project.
+The issue of litter’s impact on health is more than a public health issue. It is an interdisciplinary issue that can draw from environmental, urban planning, and data science perspectives. Addressing this issue requires collaboration with those from different disciplines. Consulted in this project were two staff members Ashley Butago and Amy Yang. Butago is a Jr. Data Analyst at the Institute of Biomedical Informatics. She helped with understanding the dataset, identified a potential need for reverse geocoding of the dataset, and suggested relevant APIs and R packages for this task. Yang is a \[verify position\]. She helped with guiding the project design, suggested different types of analysis for this project, and helped to shape the research questions.
 
 ## Methods {#sec-methods}
 
 Describe the data used and general methodological approach used to address the problem described in the @sec-introduction. Subsequently, incorporate full R code necessary to retrieve and clean data, and perform analysis. Be sure to include a description of code so that others (including your future self) can understand what you are doing and why.
 
+\[text to describe the dataset here\]
+
+First, we will call all relevant packages needed for this analysis.
+
 ```{R}
-# Call libraries and load data
+# Call packages
 library(sf)
 library(tidyverse)
 library(tigris)
 library(RColorBrewer)
 library(leaflet)
 library(tidycensus)
-
+census_api_key("236cc5bdb28a86ce5217b6b38ed76ff08d4976b3", install = TRUE, overwrite = TRUE)
 ```
 
+Next, we will load in the Philly Litter Index, along with shape data of the Philadelphia census tracts and relevant values from the American Community Survey (ACS).
+
 ```{R}
+# Load litter data
 litter_data <- read.csv(file = "/Users/cglai/Documents/UPenn/BMIN_5030/BMIN5030_Final_Project/Litter_Index_Blocks.csv")
 litter_shp <- st_read("/Users/cglai/Documents/UPenn/BMIN_5030/BMIN5030_Final_Project/Litter_Index_Blocks-shp")
+
+
+
+# Load census tract data 
+philly_tracts <- tracts("PA", "Philadelphia", year = 2010)
+
+
+
+# Load census data
+census_vals <- get_acs(geography = "tract",
+                   year = 2017,
+                   variables = c("B06012_001", "B25077_002", 
+                                 "B25031_001", "B06009_003"),
+                   state = "PA", 
+                   county = "Philadelphia")
+
+# B06011_001 --> median household income** NOT CORRECT
+# B06012_002 --> number of people in poverty
+# B25077_001 --> meadian home value
+# B25031_001 --> median gross rent
+# B06009_003 --> number of people who have high school as their highest level of education completed
+
+# v17 <- load_variables(2017, "acs5", cache = TRUE)
+# view(v17)
+```
+
+Now that we have loaded all the data needed in this analysis the datasets need to be joined. First, we will join the Philly Litter Index shape dataset to the Philadelphia census tract shape dataset. This will allow for the litter index to be plotted on a map by census tract. Then, This will allow for liner regression to be done on the data to understand how litter correlates to household income, poverty level, median home value, median rent, and level of people who achieved a highschool diploma or equivalent.
+
+```{R}
+# code to join the litter shape data to tract data
+
+# code to join the litter csv data to the census values
+```
+
+\[talk about doing regression\]
+
+```{R}
+# code for regression
 ```
 
 ## Results {#sec-results}
 
 Describe your results and include relevant tables, plots, and code/comments used to obtain them. You may refer to the @sec-methods as needed. End with a brief conclusion of your findings related to the question you set out to address. You can include references if you'd like, but this is not required.
+
+\[text\]
+
+```{R}
+# Map code
+```
+
+\[text\]
+
+```{R}
+# code for regression plots
+# report p-values here
+```
 
 ## Conclusion
 
