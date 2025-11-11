@@ -63,10 +63,8 @@ litter_data <- read.csv(file = "/Users/cglai/Documents/UPenn/BMIN_5030/BMIN5030_
 litter_shp <- st_read("/Users/cglai/Documents/UPenn/BMIN_5030/BMIN5030_Final_Project/Litter_Index_Blocks-shp")
 
 
-
 # Load census tract data 
 philly_tracts <- tracts("PA", "Philadelphia", year = 2010)
-
 
 
 # Load census data
@@ -77,7 +75,18 @@ census_vals <- get_acs(geography = "tract",
                    state = "PA", 
                    county = "Philadelphia")
 
-# B06011_001 --> median household income** NOT CORRECT
+census_vals <- census_vals |> 
+                  mutate(
+                    measure = case_when(
+                      variable == "B06011_001" ~ "median household income",
+                      variable == "B06012_002" ~ "num people in poverty",
+                      variable == "B25077_001" ~ "meadian home value",
+                      variable == "B25031_001" ~ "median gross rent",
+                      variable == "B06009_003" ~ "num people highschool"
+                    )
+                  )
+
+# B06011_001 --> median household income
 # B06012_002 --> number of people in poverty
 # B25077_001 --> meadian home value
 # B25031_001 --> median gross rent
@@ -85,19 +94,35 @@ census_vals <- get_acs(geography = "tract",
 
 ```
 
-Now that we have loaded all the data needed in this analysis the datasets need to be joined. First, we will join the Philly Litter Index shape dataset to the Philadelphia census tract shape dataset. This will allow for the litter index to be plotted on a map by census tract. Then, This will allow for liner regression to be done on the data to understand how litter correlates to household income, poverty level, median home value, median rent, and level of people who achieved a highschool diploma or equivalent.
+Now that we have loaded all the data needed in this analysis the datasets need to be joined. First, we will join `litter_data` to `philly_tracts` and summarize the resulting dataset to get an average litter index value for each census tract. The resulting dataset `litter_data` will have \[\]. Then, to be able to plot the average litter index for each census tract on a map, `litter_avg` will be joined to `philly_tracts` by `GEOID10` to get the tract geometry back.
+
+Then, the new dataset `litter_avg` will be joined to `census_vals` to get
+
+This will allow for the litter index to be plotted on a map by census tract. Then, this will allow for liner regression to be done on the data to understand how litter correlates to household income, poverty level, median home value, median rent, and level of people who achieved a highschool diploma or equivalent.
 
 ```{R}
 # code to join the litter shape data to tract data
-st_crs(litter_shp)
-st_crs(philly_tracts)
-
 litter_shp_trans <- st_transform(litter_shp, 4269)
 philly_tracts_trans <- st_transform(philly_tracts, 4269)
 
 shapes_joined <- st_join(litter_shp_trans, philly_tracts_trans, join = st_within)
 
-# code to join the litter csv data to the census values
+# group and average litte data by census tract removing NAs
+litter_avg <- shapes_joined |>
+                    group_by(GEOID10) |> 
+                    summarise(avg_litter = mean(STREET_CLA, na.rm = TRUE))
+
+head(litter_avg)
+
+# get census tract geometery back
+litter_map <- st_drop_geometry(litter_avg) |> 
+                left_join(philly_tracts, by = "GEOID10")
+# class(litter_map)
+litter_map <- st_as_sf(litter_map)
+
+# join to get a dataset that contains avg litter and all other wealth metrics
+litter_census <- left_join(litter_avg, census_vals, by = c("GEOID10" = "GEOID"))
+litter_census <- st_drop_geometry(litter_census)
 
 
 ```
@@ -106,6 +131,7 @@ shapes_joined <- st_join(litter_shp_trans, philly_tracts_trans, join = st_within
 
 ```{R}
 # code for regression
+# include confounders
 ```
 
 ## Results {#sec-results}
@@ -116,6 +142,27 @@ Describe your results and include relevant tables, plots, and code/comments used
 
 ```{R}
 # Map code
+# ggplot(data = litter_map, aes(fill = avg_litter)) +
+#   geom_sf()
+litter_map <- st_transform(litter_map, crs = 4326)
+
+pal <- colorNumeric(
+  palette = c("green", "yellow", "red"),  # gradient from green → yellow → red
+  domain = litter_map$avg_litter
+)
+
+leaflet(litter_map) |>
+  addPolygons(fillColor = pal(litter_map$avg_litter),
+              fillOpacity = 1,
+              stroke = FALSE,
+              popup = "message") |>   
+  addTiles() |> 
+  # addLegend("bottomright",
+  #           pal = pal_fun,
+  #           values = ~ change,
+  #           title = "Change in obesity rate",
+  #           opacity = 1) |>
+  addScaleBar()
 ```
 
 \[text\]
