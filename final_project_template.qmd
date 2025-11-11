@@ -73,7 +73,7 @@ philly_tracts <- tracts("PA", "Philadelphia", year = 2010)
 census_vals <- get_acs(geography = "tract",
                    year = 2017,
                    variables = c("B06012_002", "B25077_001", 
-                                 "B25031_001", "B06009_003"),
+                                 "B25031_001", "B06009_003", "B06011_001"),
                    state = "PA", 
                    county = "Philadelphia")
 
@@ -83,8 +83,6 @@ census_vals <- get_acs(geography = "tract",
 # B25031_001 --> median gross rent
 # B06009_003 --> number of people who have high school as their highest level of education completed
 
-# v17 <- load_variables(2017, "acs5", cache = TRUE)
-# view(v17)
 ```
 
 Now that we have loaded all the data needed in this analysis the datasets need to be joined. First, we will join the Philly Litter Index shape dataset to the Philadelphia census tract shape dataset. This will allow for the litter index to be plotted on a map by census tract. Then, This will allow for liner regression to be done on the data to understand how litter correlates to household income, poverty level, median home value, median rent, and level of people who achieved a highschool diploma or equivalent.
@@ -93,7 +91,11 @@ Now that we have loaded all the data needed in this analysis the datasets need t
 # code to join the litter shape data to tract data
 st_crs(litter_shp)
 st_crs(philly_tracts)
-shapes_joined <- st_join(litter_shp, philly_tracts, join = st_within)
+
+litter_shp_trans <- st_transform(litter_shp, 4269)
+philly_tracts_trans <- st_transform(philly_tracts, 4269)
+
+shapes_joined <- st_join(litter_shp_trans, philly_tracts_trans, join = st_within)
 
 # code to join the litter csv data to the census values
 
