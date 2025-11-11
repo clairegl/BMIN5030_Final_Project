@@ -18,7 +18,7 @@ Use this template to complete your project throughout the course. Your Final Pro
 
 Litter and neighborhood cleanliness are important social determinants of health that can negatively impact the safety and health of a city’s residents (1). In Philadelphia litter was ranked as the second most pressing issue in the city by residents (2). This project aims to understand how litter is distributed throughout the city and which areas may be disproportionately impacted by a high litter presence.
 
-Ashley Butago, a Jr. Data Analyst at the Institute of Biomedical Informatics was consulted for this project and helped identify a potential need for reverse geocoding of the dataset and relevant tools for this task. Amy Yang, a \[verify position\], was also consulted for this project and helped guide the project design and analysis.
+Ashley Butago, a Jr. Data Analyst at the Institute of Biomedical Informatics was consulted for this project and helped identify a potential need for reverse geocoding of the dataset and relevant tools for this task. Amy Yang, a Research Specialist, was also consulted for this project and helped guide the project design and analysis.
 
 <https://github.com/clairegl/BMIN5030_Final_Project>
 
@@ -34,7 +34,7 @@ RQ1: How is litter distributed throughout Philadelphia?
 
 RQ2: How is the distribution of litter correlated to median household income, education and other indicators of wealth and vulnrability?
 
-The issue of litter’s impact on health is more than a public health issue. It is an interdisciplinary issue that can draw from environmental, urban planning, and data science perspectives. Addressing this issue requires collaboration with those from different disciplines. Consulted in this project were two staff members Ashley Butago and Amy Yang. Butago is a Jr. Data Analyst at the Institute of Biomedical Informatics. She helped with understanding the dataset, identified a potential need for reverse geocoding of the dataset, and suggested relevant APIs and R packages for this task. Yang is a \[verify position\]. She helped with guiding the project design, suggested different types of analysis for this project, and helped to shape the research questions.
+The issue of litter’s impact on health is more than a public health issue. It is an interdisciplinary issue that can draw from environmental, urban planning, and data science perspectives. Addressing this issue requires collaboration with those from different disciplines. Consulted in this project were two staff members Ashley Butago and Amy Yang. Butago is a Jr. Data Analyst at the Institute of Biomedical Informatics. She helped with understanding the dataset, identified a potential need for reverse geocoding of the dataset, and suggested relevant APIs and R packages for this task. Yang is a Research Specialist in the Guo Lab. She helped with guiding the project design, suggested different types of analysis for this project, and helped to shape the research questions.
 
 ## Methods {#sec-methods}
 
