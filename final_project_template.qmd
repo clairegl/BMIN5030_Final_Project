@@ -32,7 +32,7 @@ This project aims to answer the following research questions:
 
 RQ1: How is litter distributed throughout Philadelphia?
 
-RQ2: How is the distribution of litter correlated to median household income, education and other indicators of wealth and vulnrability?
+RQ2: How is the distribution of litter correlated to median household income, education and other indicators of wealth and vulnerability?
 
 The issue of litter’s impact on health is more than a public health issue. It is an interdisciplinary issue that can draw from environmental, urban planning, and data science perspectives. Addressing this issue requires collaboration with those from different disciplines. Consulted in this project were two staff members Ashley Butago and Amy Yang. Butago is a Jr. Data Analyst at the Institute of Biomedical Informatics. She helped with understanding the dataset, identified a potential need for reverse geocoding of the dataset, and suggested relevant APIs and R packages for this task. Yang is a Research Specialist in the Guo Lab. She helped with guiding the project design, suggested different types of analysis for this project, and helped to shape the research questions.
 
@@ -91,8 +91,13 @@ Now that we have loaded all the data needed in this analysis the datasets need t
 
 ```{R}
 # code to join the litter shape data to tract data
+st_crs(litter_shp)
+st_crs(philly_tracts)
+shapes_joined <- st_join(litter_shp, philly_tracts, join = st_within)
 
 # code to join the litter csv data to the census values
+
+
 ```
 
 \[talk about doing regression\]
