@@ -142,27 +142,33 @@ Describe your results and include relevant tables, plots, and code/comments used
 
 ```{R}
 # Map code
-# ggplot(data = litter_map, aes(fill = avg_litter)) +
-#   geom_sf()
 litter_map <- st_transform(litter_map, crs = 4326)
 
 pal <- colorNumeric(
-  palette = c("green", "yellow", "red"),  # gradient from green → yellow → red
+  palette = c("green", "yellow", "red"),
   domain = litter_map$avg_litter
 )
+
+message <- paste("Litter index value:", litter_map$avg_litter,
+                 "<br> Census Tract:", litter_map$NAMELSAD10)
 
 leaflet(litter_map) |>
   addPolygons(fillColor = pal(litter_map$avg_litter),
               fillOpacity = 1,
               stroke = FALSE,
-              popup = "message") |>   
+              popup = message) |>   
   addTiles() |> 
-  # addLegend("bottomright",
-  #           pal = pal_fun,
-  #           values = ~ change,
-  #           title = "Change in obesity rate",
-  #           opacity = 1) |>
+  addLegend("bottomright",
+             pal = pal,
+             values = litter_map$avg_litter,
+             title = "Litter Index Value",
+             opacity = 1) |>
   addScaleBar()
+
+
+# look at univeristy locations and giving the raknking and see how they play into that
+# look at trails and streets with bike lanes 
+# she thought it was a great project and thought a lot of people in philly would be interested thinks it's great!
 ```
 
 \[text\]
