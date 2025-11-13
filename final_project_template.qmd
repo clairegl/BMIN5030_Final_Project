@@ -92,6 +92,10 @@ census_vals <- census_vals |>
 # B25031_001 --> median gross rent
 # B06009_003 --> number of people who have high school as their highest level of education completed
 
+
+# Load trash can data
+trash_can_data <- st_read("/Users/cglai/Documents/UPenn/BMIN_5030/BMIN5030_Final_Project/WasteBaskets_Big_Belly")
+
 ```
 
 Now that we have loaded all the data needed in this analysis the datasets need to be joined. First, we will join `litter_data` to `philly_tracts` and summarize the resulting dataset to get an average litter index value for each census tract. The resulting dataset `litter_data` will have \[\]. Then, to be able to plot the average litter index for each census tract on a map, `litter_avg` will be joined to `philly_tracts` by `GEOID10` to get the tract geometry back.
@@ -124,7 +128,6 @@ litter_map <- st_as_sf(litter_map)
 litter_census <- left_join(litter_avg, census_vals, by = c("GEOID10" = "GEOID"))
 litter_census <- st_drop_geometry(litter_census)
 
-
 ```
 
 \[talk about doing regression\]
@@ -143,6 +146,7 @@ Describe your results and include relevant tables, plots, and code/comments used
 ```{R}
 # Map code
 litter_map <- st_transform(litter_map, crs = 4326)
+trash_can_data <- st_transform(trash_can_data, crs = 4326)
 
 pal <- colorNumeric(
   palette = c("green", "yellow", "red"),
@@ -152,11 +156,13 @@ pal <- colorNumeric(
 message <- paste("Litter index value:", litter_map$avg_litter,
                  "<br> Census Tract:", litter_map$NAMELSAD10)
 
-leaflet(litter_map) |>
-  addPolygons(fillColor = pal(litter_map$avg_litter),
+leaflet() |>
+  addPolygons(data = litter_map,
+              fillColor = pal(litter_map$avg_litter),
               fillOpacity = 1,
               stroke = FALSE,
-              popup = message) |>   
+              popup = message) |>  
+  # addCircleMarkers(data = trash_can_data) |> 
   addTiles() |> 
   addLegend("bottomright",
              pal = pal,
