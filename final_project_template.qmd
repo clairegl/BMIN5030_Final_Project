@@ -11,6 +11,8 @@ embed-resources: true
 ------------------------------------------------------------------------
 
 > Questions to ask:
+>
+> data table manipulation
 
 Use this template to complete your project throughout the course. Your Final Project presentation will be based on the contents of this document. Replace the title/name above and text below with your own, but keep the headers. Feel free to change the theme and other display settings, although this is not required.
 
@@ -44,7 +46,7 @@ Describe the data used and general methodological approach used to address the p
 
 First, we will call all relevant packages needed for this analysis.
 
-```{R}
+```{R, results="hide"}
 # Call packages
 library(sf)
 library(tidyverse)
@@ -57,14 +59,16 @@ census_api_key("236cc5bdb28a86ce5217b6b38ed76ff08d4976b3", install = TRUE, overw
 
 Next, we will load in the Philly Litter Index, along with shape data of the Philadelphia census tracts and relevant values from the American Community Survey (ACS).
 
+```{R, results="hide"}
+# Load census tract data 
+philly_tracts <- tracts("PA", "Philadelphia", year = 2010)
+```
+
 ```{R}
 # Load litter data
 litter_data <- read.csv(file = "/Users/cglai/Documents/UPenn/BMIN_5030/BMIN5030_Final_Project/Litter_Index_Blocks.csv")
 litter_shp <- st_read("/Users/cglai/Documents/UPenn/BMIN_5030/BMIN5030_Final_Project/Litter_Index_Blocks-shp")
 
-
-# Load census tract data 
-philly_tracts <- tracts("PA", "Philadelphia", year = 2010)
 
 
 # Load census data
@@ -95,12 +99,15 @@ census_vals <- census_vals |>
 
 # Load trash can data
 trash_can_data <- st_read("/Users/cglai/Documents/UPenn/BMIN_5030/BMIN5030_Final_Project/WasteBaskets_Big_Belly")
+trash_can_data <- trash_can_data[trash_can_data$serialnumb != "500104920",]
 
 ```
 
 Now that we have loaded all the data needed in this analysis the datasets need to be joined. First, we will join `litter_data` to `philly_tracts` and summarize the resulting dataset to get an average litter index value for each census tract. The resulting dataset `litter_data` will have \[\]. Then, to be able to plot the average litter index for each census tract on a map, `litter_avg` will be joined to `philly_tracts` by `GEOID10` to get the tract geometry back.
 
 Then, the new dataset `litter_avg` will be joined to `census_vals` to get
+
+\[explicitly mention grouping\]
 
 This will allow for the litter index to be plotted on a map by census tract. Then, this will allow for liner regression to be done on the data to understand how litter correlates to household income, poverty level, median home value, median rent, and level of people who achieved a highschool diploma or equivalent.
 
@@ -124,9 +131,32 @@ litter_map <- st_drop_geometry(litter_avg) |>
 # class(litter_map)
 litter_map <- st_as_sf(litter_map)
 
+
+
+
+
 # join to get a dataset that contains avg litter and all other wealth metrics
 litter_census <- left_join(litter_avg, census_vals, by = c("GEOID10" = "GEOID"))
 litter_census <- st_drop_geometry(litter_census)
+
+# find and filter out tracts with no data
+no_data <- litter_census |>
+  group_by(GEOID10, estimate) |>
+  filter (n() > 1) |>
+  ungroup()
+
+tract_list <- list(unique(no_data$GEOID10))
+
+litter_census <- litter_census |> 
+  filter(!tract_list %in% litter_census)
+
+# pivot litter_cesus
+litter_census <- litter_census |>
+  pivot_wider(
+    id_cols = GEOID10,
+    names_from = measure,
+    values_from = estimate
+  )
 
 ```
 
@@ -134,7 +164,9 @@ litter_census <- st_drop_geometry(litter_census)
 
 ```{R}
 # code for regression
-# include confounders
+# with and without include confounders
+
+# lm()
 ```
 
 ## Results {#sec-results}
@@ -156,13 +188,16 @@ pal <- colorNumeric(
 message <- paste("Litter index value:", litter_map$avg_litter,
                  "<br> Census Tract:", litter_map$NAMELSAD10)
 
+x <- paste(trash_can_data$serialnumb)
+
 leaflet() |>
   addPolygons(data = litter_map,
               fillColor = pal(litter_map$avg_litter),
               fillOpacity = 1,
               stroke = FALSE,
               popup = message) |>  
-  # addCircleMarkers(data = trash_can_data) |> 
+  addCircleMarkers(data = trash_can_data,
+                   radius = 1) |> 
   addTiles() |> 
   addLegend("bottomright",
              pal = pal,
