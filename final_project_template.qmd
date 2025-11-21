@@ -75,18 +75,22 @@ litter_shp <- st_read("/Users/cglai/Documents/UPenn/BMIN_5030/BMIN5030_Final_Pro
 census_vals <- get_acs(geography = "tract",
                    year = 2017,
                    variables = c("B06012_002", "B25077_001", 
-                                 "B25031_001", "B06009_003", "B06011_001"),
+                                 "B25031_001", "B06009_003", "B19013A_001", 
+                                 "B02001_001",
+                                 "B05011_002"),
                    state = "PA", 
                    county = "Philadelphia")
 
 census_vals <- census_vals |> 
                   mutate(
                     measure = case_when(
-                      variable == "B06011_001" ~ "median household income",
+                      variable == "B19013A_001" ~ "median household income",
                       variable == "B06012_002" ~ "num people in poverty",
                       variable == "B25077_001" ~ "meadian home value",
                       variable == "B25031_001" ~ "median gross rent",
-                      variable == "B06009_003" ~ "num people highschool"
+                      variable == "B06009_003" ~ "num people highschool",
+                      variable == "B02001_001" ~ "test",
+                      variable == "B05011_002" ~ "num not a citizen"
                     )
                   )
 
@@ -95,6 +99,7 @@ census_vals <- census_vals |>
 # B25077_001 --> meadian home value
 # B25031_001 --> median gross rent
 # B06009_003 --> number of people who have high school as their highest level of education completed
+# acs <- load_variables(2017, "acs5", cache = TRUE)
 
 
 # Load trash can data
@@ -131,32 +136,32 @@ litter_map <- st_drop_geometry(litter_avg) |>
 # class(litter_map)
 litter_map <- st_as_sf(litter_map)
 
+head(litter_map)
 
-
-
-
-# join to get a dataset that contains avg litter and all other wealth metrics
-litter_census <- left_join(litter_avg, census_vals, by = c("GEOID10" = "GEOID"))
-litter_census <- st_drop_geometry(litter_census)
-
-# find and filter out tracts with no data
-no_data <- litter_census |>
-  group_by(GEOID10, estimate) |>
+# find and filter out tracts with not enough data
+no_data <- census_vals |>
+  group_by(GEOID, estimate) |>
   filter (n() > 1) |>
   ungroup()
 
 tract_list <- list(unique(no_data$GEOID10))
 
-litter_census <- litter_census |> 
+census_vals <- census_vals |> 
   filter(!tract_list %in% litter_census)
 
-# pivot litter_cesus
-litter_census <- litter_census |>
+# pivot census data
+census_vals <- census_vals |>
   pivot_wider(
-    id_cols = GEOID10,
+    id_cols = GEOID,
     names_from = measure,
     values_from = estimate
   )
+
+# join to get a dataset that contains avg litter and all census values
+litter_census <- left_join(litter_avg, census_vals, by = c("GEOID10" = "GEOID"))
+litter_census <- st_drop_geometry(litter_census)
+
+head(litter_census)
 
 ```
 
