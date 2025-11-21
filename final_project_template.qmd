@@ -34,7 +34,7 @@ This project aims to answer the following research questions:
 
 RQ1: How is litter distributed throughout Philadelphia?
 
-RQ2: How is the distribution of litter correlated to median household income, education and other indicators of wealth and vulnerability?
+RQ2: How is the distribution of litter correlated to median household income, median home value, and other indicators of wealth and vulnerability?
 
 The issue of litter’s impact on health is more than a public health issue. It is an interdisciplinary issue that can draw from environmental, urban planning, and data science perspectives. Addressing this issue requires collaboration with those from different disciplines. Consulted in this project were two staff members Ashley Butago and Amy Yang. Butago is a Jr. Data Analyst at the Institute of Biomedical Informatics. She helped with understanding the dataset, identified a potential need for reverse geocoding of the dataset, and suggested relevant APIs and R packages for this task. Yang is a Research Specialist in the Guo Lab. She helped with guiding the project design, suggested different types of analysis for this project, and helped to shape the research questions.
 
@@ -84,13 +84,13 @@ census_vals <- get_acs(geography = "tract",
 census_vals <- census_vals |> 
                   mutate(
                     measure = case_when(
-                      variable == "B19013A_001" ~ "median household income",
-                      variable == "B06012_002" ~ "num people in poverty",
-                      variable == "B25077_001" ~ "meadian home value",
-                      variable == "B25031_001" ~ "median gross rent",
-                      variable == "B06009_003" ~ "num people highschool",
+                      variable == "B19013A_001" ~ "median_household_income",
+                      variable == "B06012_002" ~ "num_people_in_poverty",
+                      variable == "B25077_001" ~ "median_home_value",
+                      variable == "B25031_001" ~ "median_gross_rent",
+                      variable == "B06009_003" ~ "num_people_highschool",
                       variable == "B02001_001" ~ "test",
-                      variable == "B05011_002" ~ "num not a citizen"
+                      variable == "B05011_002" ~ "num_not_a_citizen"
                     )
                   )
 
@@ -99,12 +99,26 @@ census_vals <- census_vals |>
 # B25077_001 --> meadian home value
 # B25031_001 --> median gross rent
 # B06009_003 --> number of people who have high school as their highest level of education completed
+# B05011_002 --> number of people who are not a US citizen
+
+# B02001_002 --> num white
+# B02001_003 --> num black / african american
+# B02001_004 --> num Native American
+# B02001_005 --> num Asian
+# B02001_006 --> num Native Hawaiin or PI
+
 # acs <- load_variables(2017, "acs5", cache = TRUE)
 
 
-# Load trash can data
+# Load trash can data 
 trash_can_data <- st_read("/Users/cglai/Documents/UPenn/BMIN_5030/BMIN5030_Final_Project/WasteBaskets_Big_Belly")
+
+# remove incorrect data point
 trash_can_data <- trash_can_data[trash_can_data$serialnumb != "500104920",]
+
+
+# Load philly planning districts
+plan_dist <- st_read("/Users/cglai/Documents/UPenn/BMIN_5030/BMIN5030_Final_Project/Planning_Districts")
 
 ```
 
@@ -147,7 +161,7 @@ no_data <- census_vals |>
 tract_list <- list(unique(no_data$GEOID10))
 
 census_vals <- census_vals |> 
-  filter(!tract_list %in% litter_census)
+  filter(!tract_list %in% census_vals)
 
 # pivot census data
 census_vals <- census_vals |>
@@ -171,7 +185,18 @@ head(litter_census)
 # code for regression
 # with and without include confounders
 
-# lm()
+lm_income <- lm(avg_litter ~ median_household_income, data = litter_census)
+summary(lm_income)
+
+lm_poverty <- lm(avg_litter ~ num_people_in_poverty, data = litter_census)
+summary(lm_poverty)
+
+lm_home_value <- lm(avg_litter ~ median_home_value, data = litter_census)
+summary(lm_home_value)
+
+lm_rent <- lm(avg_litter ~ median_gross_rent, data = litter_census)
+summary(lm_rent)
+
 ```
 
 ## Results {#sec-results}
@@ -184,6 +209,7 @@ Describe your results and include relevant tables, plots, and code/comments used
 # Map code
 litter_map <- st_transform(litter_map, crs = 4326)
 trash_can_data <- st_transform(trash_can_data, crs = 4326)
+plan_dist <- st_transform(plan_dist, crs = 4326)
 
 pal <- colorNumeric(
   palette = c("green", "yellow", "red"),
@@ -200,9 +226,12 @@ leaflet() |>
               fillColor = pal(litter_map$avg_litter),
               fillOpacity = 1,
               stroke = FALSE,
-              popup = message) |>  
-  addCircleMarkers(data = trash_can_data,
-                   radius = 1) |> 
+              popup = message) |>
+  addPolygons(data = plan_dist,
+              weight = 1,
+              fillOpacity = 0) |> 
+  # addCircleMarkers(data = trash_can_data,
+  #                  radius = 1) |> 
   addTiles() |> 
   addLegend("bottomright",
              pal = pal,
@@ -215,6 +244,29 @@ leaflet() |>
 # look at univeristy locations and giving the raknking and see how they play into that
 # look at trails and streets with bike lanes 
 # she thought it was a great project and thought a lot of people in philly would be interested thinks it's great!
+```
+
+\[text\]
+
+```{R}
+leaflet() |>
+  addPolygons(data = litter_map,
+              fillColor = pal(litter_map$avg_litter),
+              fillOpacity = 1,
+              stroke = FALSE,
+              popup = message) |>
+  addPolygons(data = plan_dist,
+              weight = 1,
+              fillOpacity = 0) |> 
+  addCircleMarkers(data = trash_can_data,
+                   radius = 1) |>
+  addTiles() |> 
+  addLegend("bottomright",
+             pal = pal,
+             values = litter_map$avg_litter,
+             title = "Litter Index Value",
+             opacity = 1) |>
+  addScaleBar()
 ```
 
 \[text\]
