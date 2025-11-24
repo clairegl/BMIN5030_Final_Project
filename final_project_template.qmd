@@ -219,8 +219,6 @@ pal <- colorNumeric(
 message <- paste("Litter index value:", litter_map$avg_litter,
                  "<br> Census Tract:", litter_map$NAMELSAD10)
 
-x <- paste(trash_can_data$serialnumb)
-
 leaflet() |>
   addPolygons(data = litter_map,
               fillColor = pal(litter_map$avg_litter),
@@ -272,9 +270,39 @@ leaflet() |>
 \[text\]
 
 ```{R}
-# code for regression plots
+# regression plot function adapted from: https://sejohnston.com/2012/08/09/a-quick-and-easy-function-to-plot-lm-results-in-r/
+ggplotRegression <- function (lm, title, x, y) {
+  
+  df <- lm$model
+  x_name <- names(df[2])
+  y_name <- names(df[1])
+
+  ggplot(df, aes_string(x = x_name, y = y_name)) + 
+    geom_point() +
+    geom_smooth(method = "lm") +
+    scale_x_continuous(labels = comma) +
+    labs(title = paste(title),
+         subtitle = paste("Adj R2 = ", signif(summary(lm)$adj.r.squared, 5),
+                       "Intercept =", signif(lm$coef[[1]],5 ),
+                       " Slope =", signif(lm$coef[[2]], 5),
+                       " P-Value =", signif(summary(lm)$coef[2,4], 5)),
+         x = paste(x),
+         y = paste(y))
+}
+
+# create the regression plots
+ggplotRegression(lm_home_value, "Correlation Between Median Home Value and Litter", "Median Home Value", "Litter Index Value")
+
+ggplotRegression(lm_income, "Correlation Between Median Household Income and Litter", "Median Household Income", "Litter Index Value")
+
+ggplotRegression(lm_poverty, "Correlation Bewteen Number of People In Poverty and Litter", "People In Poverty", "Litter Index Value")
+
+ggplotRegression(lm_rent, "Correlation Between Median Household Rent and Litter", "Median Household Rent", "Litter Index Value")
+
 # report p-values here
 ```
+
+\[text\]
 
 ## Conclusion
 
