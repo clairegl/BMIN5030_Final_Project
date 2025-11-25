@@ -11,8 +11,6 @@ embed-resources: true
 ------------------------------------------------------------------------
 
 > Questions to ask:
->
-> data table manipulation
 
 Use this template to complete your project throughout the course. Your Final Project presentation will be based on the contents of this document. Replace the title/name above and text below with your own, but keep the headers. Feel free to change the theme and other display settings, although this is not required.
 
@@ -46,7 +44,7 @@ Describe the data used and general methodological approach used to address the p
 
 First, we will call all relevant packages needed for this analysis.
 
-```{R, results="hide"}
+```{R}
 # Call packages
 library(sf)
 library(tidyverse)
@@ -54,12 +52,13 @@ library(tigris)
 library(RColorBrewer)
 library(leaflet)
 library(tidycensus)
+library(ggplot2)
 census_api_key("236cc5bdb28a86ce5217b6b38ed76ff08d4976b3", install = TRUE, overwrite = TRUE)
 ```
 
 Next, we will load in the Philly Litter Index, along with shape data of the Philadelphia census tracts and relevant values from the American Community Survey (ACS).
 
-```{R, results="hide"}
+```{R}
 # Load census tract data 
 philly_tracts <- tracts("PA", "Philadelphia", year = 2010)
 ```
@@ -107,7 +106,11 @@ census_vals <- census_vals |>
 # B02001_005 --> num Asian
 # B02001_006 --> num Native Hawaiin or PI
 
-# acs <- load_variables(2017, "acs5", cache = TRUE)
+# segregation index
+# Future directions looking at confounders
+
+# code to view avaliable acs data
+acs <- load_variables(2017, "acs5", cache = TRUE)
 
 
 # Load trash can data 
@@ -121,6 +124,8 @@ trash_can_data <- trash_can_data[trash_can_data$serialnumb != "500104920",]
 plan_dist <- st_read("/Users/cglai/Documents/UPenn/BMIN_5030/BMIN5030_Final_Project/Planning_Districts")
 
 ```
+
+\[\]
 
 Now that we have loaded all the data needed in this analysis the datasets need to be joined. First, we will join `litter_data` to `philly_tracts` and summarize the resulting dataset to get an average litter index value for each census tract. The resulting dataset `litter_data` will have \[\]. Then, to be able to plot the average litter index for each census tract on a map, `litter_avg` will be joined to `philly_tracts` by `GEOID10` to get the tract geometry back.
 
@@ -137,6 +142,7 @@ philly_tracts_trans <- st_transform(philly_tracts, 4269)
 
 shapes_joined <- st_join(litter_shp_trans, philly_tracts_trans, join = st_within)
 
+
 # group and average litte data by census tract removing NAs
 litter_avg <- shapes_joined |>
                     group_by(GEOID10) |> 
@@ -144,13 +150,15 @@ litter_avg <- shapes_joined |>
 
 head(litter_avg)
 
+
 # get census tract geometery back
 litter_map <- st_drop_geometry(litter_avg) |> 
                 left_join(philly_tracts, by = "GEOID10")
-# class(litter_map)
+
 litter_map <- st_as_sf(litter_map)
 
 head(litter_map)
+
 
 # find and filter out tracts with not enough data
 no_data <- census_vals |>
@@ -216,8 +224,8 @@ pal <- colorNumeric(
   domain = litter_map$avg_litter
 )
 
-message <- paste("Litter index value:", litter_map$avg_litter,
-                 "<br> Census Tract:", litter_map$NAMELSAD10)
+message <- paste0("Litter index value: ", litter_map$avg_litter,
+                 "<br> Census Tract: ", litter_map$NAMELSAD10)
 
 leaflet() |>
   addPolygons(data = litter_map,
@@ -225,11 +233,9 @@ leaflet() |>
               fillOpacity = 1,
               stroke = FALSE,
               popup = message) |>
-  addPolygons(data = plan_dist,
+  addPolylines(data = plan_dist,
               weight = 1,
-              fillOpacity = 0) |> 
-  # addCircleMarkers(data = trash_can_data,
-  #                  radius = 1) |> 
+              fillOpacity = 0) |>
   addTiles() |> 
   addLegend("bottomright",
              pal = pal,
@@ -253,9 +259,9 @@ leaflet() |>
               fillOpacity = 1,
               stroke = FALSE,
               popup = message) |>
-  addPolygons(data = plan_dist,
+  addPolylines(data = plan_dist,
               weight = 1,
-              fillOpacity = 0) |> 
+              fillOpacity = 0) |>
   addCircleMarkers(data = trash_can_data,
                    radius = 1) |>
   addTiles() |> 
@@ -271,7 +277,7 @@ leaflet() |>
 
 ```{R}
 # regression plot function adapted from: https://sejohnston.com/2012/08/09/a-quick-and-easy-function-to-plot-lm-results-in-r/
-ggplotRegression <- function (lm, title, x, y) {
+plot_reg <- function (lm, title, x, y) {
   
   df <- lm$model
   x_name <- names(df[2])
@@ -280,7 +286,7 @@ ggplotRegression <- function (lm, title, x, y) {
   ggplot(df, aes_string(x = x_name, y = y_name)) + 
     geom_point() +
     geom_smooth(method = "lm") +
-    scale_x_continuous(labels = comma) +
+    # scale_x_continuous(labels = comma) +
     labs(title = paste(title),
          subtitle = paste("Adj R2 = ", signif(summary(lm)$adj.r.squared, 5),
                        "Intercept =", signif(lm$coef[[1]],5 ),
@@ -291,18 +297,27 @@ ggplotRegression <- function (lm, title, x, y) {
 }
 
 # create the regression plots
-ggplotRegression(lm_home_value, "Correlation Between Median Home Value and Litter", "Median Home Value", "Litter Index Value")
+plot_reg(lm_home_value, "Correlation Between Median Home Value and Litter", "Median Home Value", "Litter Index Value")
 
-ggplotRegression(lm_income, "Correlation Between Median Household Income and Litter", "Median Household Income", "Litter Index Value")
+plot_reg(lm_income, "Correlation Between Median Household Income and Litter", "Median Household Income", "Litter Index Value")
 
-ggplotRegression(lm_poverty, "Correlation Bewteen Number of People In Poverty and Litter", "People In Poverty", "Litter Index Value")
+plot_reg(lm_poverty, "Correlation Bewteen Number of People In Poverty and Litter", "People In Poverty", "Litter Index Value")
 
-ggplotRegression(lm_rent, "Correlation Between Median Household Rent and Litter", "Median Household Rent", "Litter Index Value")
+plot_reg(lm_rent, "Correlation Between Median Household Rent and Litter", "Median Household Rent", "Litter Index Value")
 
-# report p-values here
+# table of odds ratios
+# talk about what ones are most associated...
 ```
 
 \[text\]
+
+```{R}
+# make a predictive model...
+# litter index dicotomized as high and low
+# where they shoudl focus their cleanup
+# new outcome variable 
+# rf 
+```
 
 ## Conclusion
 
