@@ -11,6 +11,16 @@ embed-resources: true
 ------------------------------------------------------------------------
 
 > Questions to ask:
+>
+> split test and train data for rf?
+>
+> okay to say that immigrant = foreign born?
+>
+> making association claims by interperting the lms?
+>
+> how to be sensitive to immigrants?
+>
+> what to say about the rf model, oob is very high overfitting... not good
 
 Use this template to complete your project throughout the course. Your Final Project presentation will be based on the contents of this document. Replace the title/name above and text below with your own, but keep the headers. Feel free to change the theme and other display settings, although this is not required.
 
@@ -53,6 +63,8 @@ library(RColorBrewer)
 library(leaflet)
 library(tidycensus)
 library(ggplot2)
+library(randomForest)
+library(tidymodels)
 census_api_key("236cc5bdb28a86ce5217b6b38ed76ff08d4976b3", install = TRUE, overwrite = TRUE)
 ```
 
@@ -74,22 +86,19 @@ litter_shp <- st_read("/Users/cglai/Documents/UPenn/BMIN_5030/BMIN5030_Final_Pro
 census_vals <- get_acs(geography = "tract",
                    year = 2017,
                    variables = c("B06012_002", "B25077_001", 
-                                 "B25031_001", "B06009_003", "B19013A_001", 
-                                 "B02001_001",
-                                 "B05011_002"),
+                                 "B25031_001", "B06009_003", "B19326_001", "B05002_013"),
                    state = "PA", 
                    county = "Philadelphia")
 
 census_vals <- census_vals |> 
                   mutate(
                     measure = case_when(
-                      variable == "B19013A_001" ~ "median_household_income",
+                      variable == "B19326_001" ~ "median_household_income",
                       variable == "B06012_002" ~ "num_people_in_poverty",
                       variable == "B25077_001" ~ "median_home_value",
                       variable == "B25031_001" ~ "median_gross_rent",
                       variable == "B06009_003" ~ "num_people_highschool",
-                      variable == "B02001_001" ~ "test",
-                      variable == "B05011_002" ~ "num_not_a_citizen"
+                      variable == "B05002_013" ~ "num_immigrants"
                     )
                   )
 
@@ -98,7 +107,7 @@ census_vals <- census_vals |>
 # B25077_001 --> meadian home value
 # B25031_001 --> median gross rent
 # B06009_003 --> number of people who have high school as their highest level of education completed
-# B05011_002 --> number of people who are not a US citizen
+# B05002_013 --> number of people who forgein born
 
 # B02001_002 --> num white
 # B02001_003 --> num black / african american
@@ -148,6 +157,14 @@ litter_avg <- shapes_joined |>
                     group_by(GEOID10) |> 
                     summarise(avg_litter = mean(STREET_CLA, na.rm = TRUE))
 
+# add add binary col of litter values for rf model
+median(litter_avg$avg_litter)
+litter_avg <- litter_avg |>
+              mutate(litter_bin = case_when(
+                avg_litter > 4 ~ "high",
+                avg_litter < 4 ~ "low"
+              ))
+
 head(litter_avg)
 
 
@@ -182,6 +199,7 @@ census_vals <- census_vals |>
 # join to get a dataset that contains avg litter and all census values
 litter_census <- left_join(litter_avg, census_vals, by = c("GEOID10" = "GEOID"))
 litter_census <- st_drop_geometry(litter_census)
+litter_census$litter_bin <- as.factor(litter_census$litter_bin)
 
 head(litter_census)
 
@@ -204,6 +222,15 @@ summary(lm_home_value)
 
 lm_rent <- lm(avg_litter ~ median_gross_rent, data = litter_census)
 summary(lm_rent)
+
+lm_edu <- lm(avg_litter ~ num_people_highschool, data = litter_census)
+summary(lm_edu)
+
+lm_poverty <- lm(avg_litter ~ num_people_in_poverty, data = litter_census)
+summary(lm_poverty)
+
+lm_im <- lm(avg_litter ~ num_immigrants, data = litter_census)
+summary(lm_im)
 
 ```
 
@@ -286,7 +313,6 @@ plot_reg <- function (lm, title, x, y) {
   ggplot(df, aes_string(x = x_name, y = y_name)) + 
     geom_point() +
     geom_smooth(method = "lm") +
-    # scale_x_continuous(labels = comma) +
     labs(title = paste(title),
          subtitle = paste("Adj R2 = ", signif(summary(lm)$adj.r.squared, 5),
                        "Intercept =", signif(lm$coef[[1]],5 ),
@@ -305,13 +331,39 @@ plot_reg(lm_poverty, "Correlation Bewteen Number of People In Poverty and Litter
 
 plot_reg(lm_rent, "Correlation Between Median Household Rent and Litter", "Median Household Rent", "Litter Index Value")
 
-# table of odds ratios
+plot_reg(lm_edu, "Correlation Between Number of People Who Have Obtained A High School Diploma and Litter", "Number of people with high school diploma", "Litter Index Value")
+
+plot_reg(lm_poverty, "Correlation Between Number of People In Poverty and Litter", "Number of people in poverty", "Litter Index Value")
+
+plot_reg(lm_im, "Correlation Between Number of People Who Are Immigrants and Litter", "Number of people who are immigrants", "Litter Index Value")
+
 # talk about what ones are most associated...
 ```
 
 \[text\]
 
 ```{R}
+set.seed(1234)
+litter_census <- na.omit(litter_census)
+rf_spec <-
+  rand_forest(trees = 1000,
+              min_n = 5) |>
+  set_engine("randomForest", importance = TRUE) |>
+  set_mode("classification")
+rf_spec
+
+rf_fit <- rf_spec |>
+  fit(litter_bin ~ median_home_value + median_gross_rent + num_people_in_poverty + 
+                   median_household_income + num_people_in_poverty + num_people_highschool +
+                   num_immigrants, data = litter_census)
+rf_fit
+
+rf_predicted <- bind_cols(
+  truth = litter_census$litter_bin,
+  predict(rf_fit, litter_census),
+  predict(rf_fit, litter_census, type = "prob")
+)
+
 # make a predictive model...
 # litter index dicotomized as high and low
 # where they shoudl focus their cleanup
