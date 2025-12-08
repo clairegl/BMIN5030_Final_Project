@@ -11,16 +11,6 @@ embed-resources: true
 ------------------------------------------------------------------------
 
 > Questions to ask:
->
-> split test and train data for rf?
->
-> okay to say that immigrant = foreign born?
->
-> making association claims by interperting the lms?
->
-> how to be sensitive to immigrants?
->
-> what to say about the rf model, oob is very high overfitting... not good
 
 Use this template to complete your project throughout the course. Your Final Project presentation will be based on the contents of this document. Replace the title/name above and text below with your own, but keep the headers. Feel free to change the theme and other display settings, although this is not required.
 
@@ -36,7 +26,7 @@ Ashley Butago, a Jr. Data Analyst at the Institute of Biomedical Informatics was
 
 Social determinants of health are made up of the condition a person lives in that impacts their health. They are non-medical and largely consist of social, environmental, and personal factors such as a person’s built environment, economic situation, and level of education. Included in this is litter, a component of a person's physical environment. It is important for a city to have proper sanitation as it is a key part of the health and safety of residents (1) and while the presence of litter can affect all residents of a place it has been shown to disproportionately impact lower income, vulnerable communities (6). Some types of litter such as broken glass can injure residents (3) while other types of litter such as food scraps can feed pests like cockroaches and rats (1). Additionally, litter not only has a physical impact but a psychological one as well. Pervasive litter influences resident’s perceptions of how safe and welcoming the area they live in is, decreasing satisfaction with their living conditions (5).
 
-In Philadelphia specifically, it was rated as the second most pressing issue of the city by residents (2). Highlighting the attitudes of and urgency around addressing the city’s litter problem and improving sanitation. Thus, the goal of this project is to map the distribution of Philadelphia's litter by census tract and how litter presence correlates to the median household income, education and other indicators of wealth and vulnrability in order to understand which parts of the city may be disproportionately impacted by litter and where city sanitation efforts should be directed.
+In Philadelphia specifically, it was rated as the second most pressing issue of the city by residents (2). Highlighting the attitudes of and urgency around addressing the city’s litter problem and improving sanitation. Thus, the goal of this project is to map the distribution of Philadelphia's litter by census tract and how litter presence correlates to the median household income, education and other indicators of wealth and vulnerability in order to understand which parts of the city may be disproportionately impacted by litter and where city sanitation efforts should be directed.
 
 This project aims to answer the following research questions:
 
@@ -48,11 +38,7 @@ The issue of litter’s impact on health is more than a public health issue. It 
 
 ## Methods {#sec-methods}
 
-Describe the data used and general methodological approach used to address the problem described in the @sec-introduction. Subsequently, incorporate full R code necessary to retrieve and clean data, and perform analysis. Be sure to include a description of code so that others (including your future self) can understand what you are doing and why.
-
-\[text to describe the dataset here\]
-
-First, we will call all relevant packages needed for this analysis.
+First, let's call all relevant packages needed for this analysis.
 
 ```{R}
 # Call packages
@@ -68,7 +54,7 @@ library(tidymodels)
 census_api_key("236cc5bdb28a86ce5217b6b38ed76ff08d4976b3", install = TRUE, overwrite = TRUE)
 ```
 
-Next, we will load in the Philly Litter Index, along with shape data of the Philadelphia census tracts and relevant values from the American Community Survey (ACS).
+The dataset this analysis is based on is the Philly Litter Index which is a survey of the litter conditions of streets, blocks, and neighborhoods within Philadelphia. Created and managed by the City of Philadelphia, the Philly Litter Index rates areas from a scale of 1 to 5 with 1 being low litter and 5 being high. This dataset is from 2017 and for this analysis, the street dataset will be used. Philadelphia census tracts and relevant values from the 2017 American Community Survey (ACS) will also be used in this analysis. The values pulled from the ACS include census tract level data of measure of wealth (citation) such as median household income, number of people in poverty, and median home value. Finally, the Big Belly Waste Baskets and Philly Planning Districts datasets will be loaded. The Planning district dataset is also managed by the City of Philadelphia and contains shape data that geographically divides the city into recognizable parts such as Center City and West Philly. The Big Belly Waste Basket is managed by the Big Belly Corporation but distributed by the City of Philadelphia and contains the locations for all Big Belly trash cans in the city in 2024.
 
 ```{R}
 # Load census tract data 
@@ -77,46 +63,35 @@ philly_tracts <- tracts("PA", "Philadelphia", year = 2010)
 
 ```{R}
 # Load litter data
-litter_data <- read.csv(file = "/Users/cglai/Documents/UPenn/BMIN_5030/BMIN5030_Final_Project/Litter_Index_Blocks.csv")
 litter_shp <- st_read("/Users/cglai/Documents/UPenn/BMIN_5030/BMIN5030_Final_Project/Litter_Index_Blocks-shp")
 
 
-
-# Load census data
+# Load acs data
 census_vals <- get_acs(geography = "tract",
                    year = 2017,
-                   variables = c("B06012_002", "B25077_001", 
-                                 "B25031_001", "B06009_003", "B19326_001", "B05002_013"),
+                   variables = c("B19326_001", "B17017_002", 
+                                 "B25077_001", "B25031_001", "B06009_005", "B05002_013"),
                    state = "PA", 
                    county = "Philadelphia")
 
 census_vals <- census_vals |> 
                   mutate(
                     measure = case_when(
-                      variable == "B19326_001" ~ "median_household_income",
-                      variable == "B06012_002" ~ "num_people_in_poverty",
+                      variable == "B19326_001" ~ "median_income",
+                      variable == "B17017_002" ~ "num_people_in_poverty",
                       variable == "B25077_001" ~ "median_home_value",
                       variable == "B25031_001" ~ "median_gross_rent",
-                      variable == "B06009_003" ~ "num_people_highschool",
+                      variable == "B06009_005" ~ "num_people_bach",
                       variable == "B05002_013" ~ "num_immigrants"
                     )
                   )
 
-# B06011_001 --> median household income
-# B06012_002 --> number of people in poverty
-# B25077_001 --> meadian home value
-# B25031_001 --> median gross rent
-# B06009_003 --> number of people who have high school as their highest level of education completed
-# B05002_013 --> number of people who forgein born
-
-# B02001_002 --> num white
-# B02001_003 --> num black / african american
-# B02001_004 --> num Native American
-# B02001_005 --> num Asian
-# B02001_006 --> num Native Hawaiin or PI
-
-# segregation index
-# Future directions looking at confounders
+# B19326_001 --> median income
+# B17017_002 --> number of people in poverty
+# B25077_001 --> median home value
+# B25031_001 --> median gross rent by bedroom
+# B06009_005 --> number of people who have a bachleors as their highest level of education completed
+# B05002_013 --> number of people who foreign born
 
 # code to view avaliable acs data
 acs <- load_variables(2017, "acs5", cache = TRUE)
@@ -134,15 +109,7 @@ plan_dist <- st_read("/Users/cglai/Documents/UPenn/BMIN_5030/BMIN5030_Final_Proj
 
 ```
 
-\[\]
-
-Now that we have loaded all the data needed in this analysis the datasets need to be joined. First, we will join `litter_data` to `philly_tracts` and summarize the resulting dataset to get an average litter index value for each census tract. The resulting dataset `litter_data` will have \[\]. Then, to be able to plot the average litter index for each census tract on a map, `litter_avg` will be joined to `philly_tracts` by `GEOID10` to get the tract geometry back.
-
-Then, the new dataset `litter_avg` will be joined to `census_vals` to get
-
-\[explicitly mention grouping\]
-
-This will allow for the litter index to be plotted on a map by census tract. Then, this will allow for liner regression to be done on the data to understand how litter correlates to household income, poverty level, median home value, median rent, and level of people who achieved a highschool diploma or equivalent.
+After loading all necessary datasets needed in this analysis the datasets need to be cleaned and joined. First, `litter_data` will be joined to `philly_tracts` and then grouped by and averaged litter index value for each census tract. Additionally, for each tract, a value of low or high is assigned. This value corresponds to the litter index value of a tract and is determined by whether it is above or below median litter index value of the dataset. The resulting dataframe `litter_avg` now contains an average litter score for each census tract but does not contain the correct shape geometry. 
 
 ```{R}
 # code to join the litter shape data to tract data
@@ -158,16 +125,19 @@ litter_avg <- shapes_joined |>
                     summarise(avg_litter = mean(STREET_CLA, na.rm = TRUE))
 
 # add add binary col of litter values for rf model
-median(litter_avg$avg_litter)
 litter_avg <- litter_avg |>
               mutate(litter_bin = case_when(
-                avg_litter > 4 ~ "high",
-                avg_litter < 4 ~ "low"
+                avg_litter >= median(litter_avg$avg_litter) ~ "high",
+                avg_litter < median(litter_avg$avg_litter) ~ "low"
               ))
 
 head(litter_avg)
 
+```
 
+To get the census tract geometry back the current geometry of litter_avg must be dropped and joined to the `philly_tracts` dataset. The resulting dataframe `litter_map` now contains all the same values as `litter_avg` with the correct tract level geometry.
+
+```{R}
 # get census tract geometery back
 litter_map <- st_drop_geometry(litter_avg) |> 
                 left_join(philly_tracts, by = "GEOID10")
@@ -175,8 +145,11 @@ litter_map <- st_drop_geometry(litter_avg) |>
 litter_map <- st_as_sf(litter_map)
 
 head(litter_map)
+```
 
+Currently, the ACS dataframe `census_vals` is not in the correct format to be used in analysis and joined to `litter_avg`. The data is row-wise instead of column-wise so it must be pivoted. However, before pivoting tracts with not enough data must be filtered out. After pivoting `census_vals` can now be joined to `litter_avg` and geometry can be dropped because it will not be needed in the analysis this data is used for. The resulting dataframe `litter_census` now contains census values by column instead of by row as well as litter index values for each tract.
 
+```{R}
 # find and filter out tracts with not enough data
 no_data <- census_vals |>
   group_by(GEOID, estimate) |>
@@ -205,40 +178,29 @@ head(litter_census)
 
 ```
 
-\[talk about doing regression\]
+Finally, `trash_can_data` needs to be cleaned to remove a datapoint with the incorrect geometry. After this the data can be manipulated to get the number of trash cans in each census tract. The resulting dataframe `cans_avg` shows the number of trash cans in each census tract and the corresponding litter index value of each tract.
 
 ```{R}
-# code for regression
-# with and without include confounders
+# remove incorrect data point
+trash_can_data <- trash_can_data[trash_can_data$serialnumb != "500104920",]
 
-lm_income <- lm(avg_litter ~ median_household_income, data = litter_census)
-summary(lm_income)
+# add number of cans by census tract
+bb_trans <- st_transform(trash_can_data, 4269)
+litter_trans <- st_transform(litter_map, 4269)
 
-lm_poverty <- lm(avg_litter ~ num_people_in_poverty, data = litter_census)
-summary(lm_poverty)
+cans_avg <- st_join(bb_trans, litter_trans, join = st_within)
 
-lm_home_value <- lm(avg_litter ~ median_home_value, data = litter_census)
-summary(lm_home_value)
-
-lm_rent <- lm(avg_litter ~ median_gross_rent, data = litter_census)
-summary(lm_rent)
-
-lm_edu <- lm(avg_litter ~ num_people_highschool, data = litter_census)
-summary(lm_edu)
-
-lm_poverty <- lm(avg_litter ~ num_people_in_poverty, data = litter_census)
-summary(lm_poverty)
-
-lm_im <- lm(avg_litter ~ num_immigrants, data = litter_census)
-summary(lm_im)
-
+cans_avg <- cans_avg |>
+                    group_by(NAMELSAD10, GEOID10, avg_litter) |> 
+                    summarize(num_cans = n())
+head(cans_avg)
 ```
+
+Now that the data is cleaned and joined, analysis on the dataset can be conducted to better understand the distribution of litter in Philadelphia and how it correlates to household income, median home value, and other measures of wealth.
 
 ## Results {#sec-results}
 
-Describe your results and include relevant tables, plots, and code/comments used to obtain them. You may refer to the @sec-methods as needed. End with a brief conclusion of your findings related to the question you set out to address. You can include references if you'd like, but this is not required.
-
-\[text\]
+To first understand the distribution of litter in Philly let’s plot a choropleth map using the the `litter_map` dataframe.
 
 ```{R}
 # Map code
@@ -272,12 +234,23 @@ leaflet() |>
   addScaleBar()
 
 
-# look at univeristy locations and giving the raknking and see how they play into that
-# look at trails and streets with bike lanes 
-# she thought it was a great project and thought a lot of people in philly would be interested thinks it's great!
+mean(litter_map$avg_litter)
+
+highest_litter <- litter_map |> 
+  arrange(desc(litter_map$avg_litter)) |> 
+  head(5)
+highest_litter
+
+lowest_litter <- litter_map |> 
+  arrange(litter_map$avg_litter) |> 
+  head(5)
+lowest_litter
+
 ```
 
-\[text\]
+From this map, it can be seen that the areas with the highest litter index values are in the south, by where the airport is. The tracts with the top 5 highest litter index values are Census Tract 9804, 50, 69, 142, 131, and 241. Areas with lower litter index values are more spread out through the city. The tracts with the 5 lowest litter index values are tracts 88.01, 9803, 4.02, 9891, and 6 with the lowest being located in West Philly. The overall mean litter index value for the entire city is 4.078416.
+
+As mentioned before this Litter Index was created to be a survey of the litter in the streets of Philadelphia and as a result of this work the city implemented multiple initiatives to clean up the city (2). One of those was to add trash cans in the city based on the distribution of litter. To see where the trash cans were added, let's add all the locations of Big Belly Waste Baskets to this map.
 
 ```{R}
 leaflet() |>
@@ -300,10 +273,46 @@ leaflet() |>
   addScaleBar()
 ```
 
-\[text\]
+With these points overlaid on top, it can be seen that while there are Big Belly Waste Baskets distributed all around the city a majority of them lie in the West Philly and Center City area. If we plot the number of Big Belly Waste Baskets for each census tract with the litter index values we can see that more Big Belly Waste Baskets are located in areas with a lower litter index value. This is also corroborated by plotting the number of Big Belly Waste Baskets in each tract and its litter index value.
+
+```{R}
+ggplot(cans_avg, aes(x = num_cans, y = avg_litter)) +
+  geom_point() +
+  labs(title = "Number Of Big Belly Waste Baskets and Litter Index Value",
+       x = "Number Of Trash Cans",
+       y = "Litter Index Value")
+```
+
+Now, let's run and plot linear regressions to understand how litter correlates to the median home value, median household income, median household rent, number of people who have obtained a bachelor’s degree, number of people living in poverty, and number of people who are immigrants within a tract. These metrics were chosen due to the fact that litter has been seen to impact lower-income and more socially vulnerable communities (3).
+
+```{R}
+# code for regression
+
+lm_income <- lm(avg_litter ~ median_income, data = litter_census)
+# summary(lm_income)
+
+lm_poverty <- lm(avg_litter ~ num_people_in_poverty, data = litter_census)
+# summary(lm_poverty)
+
+lm_home_value <- lm(avg_litter ~ median_home_value, data = litter_census)
+# summary(lm_home_value)
+
+lm_rent <- lm(avg_litter ~ median_gross_rent, data = litter_census)
+# summary(lm_rent)
+
+lm_edu <- lm(avg_litter ~ num_people_bach, data = litter_census)
+# summary(lm_edu)
+
+lm_im <- lm(avg_litter ~ num_immigrants, data = litter_census)
+# summary(lm_im)
+```
+
+Now, lets plot these regressions to more easily visualize them.
 
 ```{R}
 # regression plot function adapted from: https://sejohnston.com/2012/08/09/a-quick-and-easy-function-to-plot-lm-results-in-r/
+
+# add std error
 plot_reg <- function (lm, title, x, y) {
   
   df <- lm$model
@@ -320,31 +329,44 @@ plot_reg <- function (lm, title, x, y) {
                        " P-Value =", signif(summary(lm)$coef[2,4], 5)),
          x = paste(x),
          y = paste(y))
+  
 }
 
 # create the regression plots
+# plot_reg(lm_cans, "Correlation between Litter Index Value and Number of Big Belly Waste Baskets", "Number of Big Belly Waste Baskets", "Litter Index Value")
+
 plot_reg(lm_home_value, "Correlation Between Median Home Value and Litter", "Median Home Value", "Litter Index Value")
 
-plot_reg(lm_income, "Correlation Between Median Household Income and Litter", "Median Household Income", "Litter Index Value")
+plot_reg(lm_income, "Correlation Between Median Income and Litter", "Median Household Income", "Litter Index Value")
 
 plot_reg(lm_poverty, "Correlation Bewteen Number of People In Poverty and Litter", "People In Poverty", "Litter Index Value")
 
 plot_reg(lm_rent, "Correlation Between Median Household Rent and Litter", "Median Household Rent", "Litter Index Value")
 
-plot_reg(lm_edu, "Correlation Between Number of People Who Have Obtained A High School Diploma and Litter", "Number of people with high school diploma", "Litter Index Value")
-
-plot_reg(lm_poverty, "Correlation Between Number of People In Poverty and Litter", "Number of people in poverty", "Litter Index Value")
+plot_reg(lm_edu, "Correlation Between Number of Educational Attainment and Litter", "Number of people with a Bachelor's Degree or higher", "Litter Index Value")
 
 plot_reg(lm_im, "Correlation Between Number of People Who Are Immigrants and Litter", "Number of people who are immigrants", "Litter Index Value")
 
-# talk about what ones are most associated...
+
 ```
 
-\[text\]
+Of the variables examined, only the median home value and median household rent variables have a significant p-value of \< 0.05. However, when looking at the slopes of the resulting graphs they are both very shallow which indicates the relationship is not strong and may not be meaningful even if it is significant. Additionally, the regressions for both the median household income and median household rent variables have extremely low adjusted R-squared values. Thus, while it can be said that median home value and median household rent show statistically significant associations with litter index values, the shallow slope and low adjusted R-squared values of these linear regressions show that these variables only explain a small part of this variation in litter index value. It suggests that the relationships may be nonlinear or involve interactions and overall are not a strong predictor of the litter levels in a census tract.
+
+Because the linear regression indicated a significant relationship between median home value and litter index as well as median household rent and litter index. A Random Forest (rf) model was created to see if it could predict litter index values.
 
 ```{R}
 set.seed(1234)
+
+# split into testing and traning 
 litter_census <- na.omit(litter_census)
+
+litter_split <- initial_split(litter_census, 
+                            strata = litter_bin, 
+                            prop = 0.80)
+
+train <- training(litter_split)
+test <- testing(litter_split)
+
 rf_spec <-
   rand_forest(trees = 1000,
               min_n = 5) |>
@@ -353,23 +375,26 @@ rf_spec <-
 rf_spec
 
 rf_fit <- rf_spec |>
-  fit(litter_bin ~ median_home_value + median_gross_rent + num_people_in_poverty + 
-                   median_household_income + num_people_in_poverty + num_people_highschool +
-                   num_immigrants, data = litter_census)
+  fit(litter_bin ~ median_home_value + median_gross_rent, data = train)
 rf_fit
 
 rf_predicted <- bind_cols(
-  truth = litter_census$litter_bin,
-  predict(rf_fit, litter_census),
-  predict(rf_fit, litter_census, type = "prob")
+  truth = test$litter_bin,
+  predict(rf_fit, test),
+  predict(rf_fit, test, type = "prob")
 )
 
-# make a predictive model...
-# litter index dicotomized as high and low
-# where they shoudl focus their cleanup
-# new outcome variable 
-# rf 
+roc_auc(rf_predicted,
+        truth, 
+        .pred_high)
+
+autoplot(roc_curve(rf_predicted, 
+                   truth, 
+                   .pred_high))
+
 ```
+
+This model achieved an AUC of 0.648 and an out-of-bag error rate of 52.6%. This indicates that the model has weak predictive power, just slightly better than random guessing. So, this median home value and median household rent alone are not appropriate for predicting litter index value, consistent with the linear regression results.
 
 ## Conclusion
 
