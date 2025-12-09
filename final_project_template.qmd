@@ -1,5 +1,5 @@
 ---
-title: "Litter distribution in The City of Philadelphia"
+title: "Understanding Philly’s Litter Problem To Better Target Public Health and Sanitation Interventions"
 subtitle: "BMIN5030 Final Project"
 author: "Claire Lai"
 format: html
@@ -12,19 +12,17 @@ embed-resources: true
 
 > Questions to ask:
 
-Use this template to complete your project throughout the course. Your Final Project presentation will be based on the contents of this document. Replace the title/name above and text below with your own, but keep the headers. Feel free to change the theme and other display settings, although this is not required.
-
 ## Overview {#sec-overview}
 
 Litter and neighborhood cleanliness are important social determinants of health that can negatively impact the safety and health of a city’s residents (1). In Philadelphia litter was ranked as the second most pressing issue in the city by residents (2). This project aims to understand how litter is distributed throughout the city and which areas may be disproportionately impacted by a high litter presence.
 
 Ashley Butago, a Jr. Data Analyst at the Institute of Biomedical Informatics was consulted for this project and helped identify a potential need for reverse geocoding of the dataset and relevant tools for this task. Amy Yang, a Research Specialist, was also consulted for this project and helped guide the project design and analysis.
 
-<https://github.com/clairegl/BMIN5030_Final_Project>
+Repo Link: <https://github.com/clairegl/BMIN5030_Final_Project>
 
 ## Introduction {#sec-introduction}
 
-Social determinants of health are made up of the condition a person lives in that impacts their health. They are non-medical and largely consist of social, environmental, and personal factors such as a person’s built environment, economic situation, and level of education. Included in this is litter, a component of a person's physical environment. It is important for a city to have proper sanitation as it is a key part of the health and safety of residents (1) and while the presence of litter can affect all residents of a place it has been shown to disproportionately impact lower income, vulnerable communities (6). Some types of litter such as broken glass can injure residents (3) while other types of litter such as food scraps can feed pests like cockroaches and rats (1). Additionally, litter not only has a physical impact but a psychological one as well. Pervasive litter influences resident’s perceptions of how safe and welcoming the area they live in is, decreasing satisfaction with their living conditions (5).
+Social determinants of health are made up of the condition a person lives in that impacts their health. They are non-medical and largely consist of social, environmental, and personal factors such as a person’s built environment, economic situation, and level of education. Included in this is litter, a component of a person's physical environment. It is important for a city to have proper sanitation as it is a key part of the health and safety of residents (1) and while the presence of litter can affect all residents of a place it has been shown to disproportionately impact lower income, vulnerable communities (6). Some types of litter such as broken glass can injure residents (3) while other types of litter such as food scraps can feed pests like cockroaches and rats which spread disease (1). Additionally, litter not only has a physical impact but a psychological one as well. Pervasive litter influences resident’s perceptions of how safe and welcoming the area they live in is, decreasing satisfaction with their living conditions (5).
 
 In Philadelphia specifically, it was rated as the second most pressing issue of the city by residents (2). Highlighting the attitudes of and urgency around addressing the city’s litter problem and improving sanitation. Thus, the goal of this project is to map the distribution of Philadelphia's litter by census tract and how litter presence correlates to the median household income, education and other indicators of wealth and vulnerability in order to understand which parts of the city may be disproportionately impacted by litter and where city sanitation efforts should be directed.
 
@@ -54,7 +52,7 @@ library(tidymodels)
 census_api_key("236cc5bdb28a86ce5217b6b38ed76ff08d4976b3", install = TRUE, overwrite = TRUE)
 ```
 
-The dataset this analysis is based on is the Philly Litter Index which is a survey of the litter conditions of streets, blocks, and neighborhoods within Philadelphia. Created and managed by the City of Philadelphia, the Philly Litter Index rates areas from a scale of 1 to 5 with 1 being low litter and 5 being high. This dataset is from 2017 and for this analysis, the street dataset will be used. Philadelphia census tracts and relevant values from the 2017 American Community Survey (ACS) will also be used in this analysis. The values pulled from the ACS include census tract level data of measure of wealth (citation) such as median household income, number of people in poverty, and median home value. Finally, the Big Belly Waste Baskets and Philly Planning Districts datasets will be loaded. The Planning district dataset is also managed by the City of Philadelphia and contains shape data that geographically divides the city into recognizable parts such as Center City and West Philly. The Big Belly Waste Basket is managed by the Big Belly Corporation but distributed by the City of Philadelphia and contains the locations for all Big Belly trash cans in the city in 2024.
+The dataset this analysis is based on is the Philly Litter Index which is a survey of the litter conditions of streets, blocks, and neighborhoods within Philadelphia. Created and managed by the City of Philadelphia, the Philly Litter Index rates areas from a scale of 1 to 5 with 1 being low litter in an area and 5 being high. This dataset is from 2017 and for this analysis, the street dataset will be used. Philadelphia census tracts and relevant values from the 5-year 2017 American Community Survey (ACS) will also be used in this analysis. The values pulled from the ACS include census tract level data of measure of wealth (citation) such as median household income, number of people in poverty, and median home value. Finally, the Big Belly Waste Baskets and Philly Planning Districts datasets will be loaded. The Planning district dataset is also managed by the City of Philadelphia and contains shape data that geographically divides the city into recognizable parts such as Center City and West Philly. The Big Belly Waste Basket is managed by the Big Belly Corporation but distributed by the City of Philadelphia and contains the locations for all Big Belly trash cans in the city in 2024.
 
 ```{R}
 # Load census tract data 
@@ -156,7 +154,7 @@ no_data <- census_vals |>
   filter (n() > 1) |>
   ungroup()
 
-tract_list <- list(unique(no_data$GEOID10))
+tract_list <- list(unique(no_data$GEOID))
 
 census_vals <- census_vals |> 
   filter(!tract_list %in% census_vals)
@@ -238,13 +236,13 @@ mean(litter_map$avg_litter)
 
 highest_litter <- litter_map |> 
   arrange(desc(litter_map$avg_litter)) |> 
-  head(5)
-highest_litter
+  head(10)
+highest_litter$NAMELSAD10
 
 lowest_litter <- litter_map |> 
   arrange(litter_map$avg_litter) |> 
-  head(5)
-lowest_litter
+  head(10)
+lowest_litter$NAMELSAD10
 
 ```
 
@@ -312,7 +310,6 @@ Now, lets plot these regressions to more easily visualize them.
 ```{R}
 # regression plot function adapted from: https://sejohnston.com/2012/08/09/a-quick-and-easy-function-to-plot-lm-results-in-r/
 
-# add std error
 plot_reg <- function (lm, title, x, y) {
   
   df <- lm$model
@@ -333,8 +330,6 @@ plot_reg <- function (lm, title, x, y) {
 }
 
 # create the regression plots
-# plot_reg(lm_cans, "Correlation between Litter Index Value and Number of Big Belly Waste Baskets", "Number of Big Belly Waste Baskets", "Litter Index Value")
-
 plot_reg(lm_home_value, "Correlation Between Median Home Value and Litter", "Median Home Value", "Litter Index Value")
 
 plot_reg(lm_income, "Correlation Between Median Income and Litter", "Median Household Income", "Litter Index Value")
@@ -346,7 +341,6 @@ plot_reg(lm_rent, "Correlation Between Median Household Rent and Litter", "Media
 plot_reg(lm_edu, "Correlation Between Number of Educational Attainment and Litter", "Number of people with a Bachelor's Degree or higher", "Litter Index Value")
 
 plot_reg(lm_im, "Correlation Between Number of People Who Are Immigrants and Litter", "Number of people who are immigrants", "Litter Index Value")
-
 
 ```
 
@@ -394,7 +388,7 @@ autoplot(roc_curve(rf_predicted,
 
 ```
 
-This model achieved an AUC of 0.648 and an out-of-bag error rate of 52.6%. This indicates that the model has weak predictive power, just slightly better than random guessing. So, this median home value and median household rent alone are not appropriate for predicting litter index value, consistent with the linear regression results.
+This model achieved an AUC of 0.648 and an out-of-bag error rate of 52.6%. This indicates that the model has weak predictive power, just slightly better than random guessing. Meaning that median home value and median household rent alone are not appropriate for predicting litter index value, consistent with the linear regression results.
 
 ## Conclusion
 
